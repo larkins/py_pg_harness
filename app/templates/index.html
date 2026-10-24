@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1d23">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="harness">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="harness — per-agent chat for the peristyle multi-agent system">
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/icon-180.png">
+  <title>harness</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="title">harness</div>
+  <div class="menu-wrap" id="menuWrap" style="display:none">
+    <button class="icon-btn" id="newGroupBtn" type="button" style="display:none"
+            aria-label="New group" title="New group">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M19 8v6M22 11h-6"/>
+      </svg>
+    </button>
+    <button class="icon-btn" id="menuBtn" type="button" aria-label="Menu" aria-haspopup="true" aria-expanded="false" title="Menu">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+        <circle cx="12" cy="5" r="2"/>
+        <circle cx="12" cy="12" r="2"/>
+        <circle cx="12" cy="19" r="2"/>
+      </svg>
+    </button>
+    <div class="menu-popover" id="menuPop" style="display:none" role="menu">
+      <div class="menu-header" id="menuHeader"></div>
+      <a class="menu-item" href="/admin/last-prompt" target="_blank" rel="noopener" role="menuitem">
+        <span class="icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+          </svg>
+        </span>
+        <span class="label">Last raw prompt</span>
+      </a>
+      <a class="menu-item" href="/admin/last-emission" target="_blank" rel="noopener" role="menuitem">
+        <span class="icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </span>
+        <span class="label">Last emission</span>
+      </a>
+      <div class="menu-divider"></div>
+      <button class="menu-item danger" id="menuLogout" type="button" role="menuitem">
+        <span class="icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>
+          </svg>
+        </span>
+        <span class="label">Log out</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <div id="loginPane" style="display: none;">
+    <form class="login-form" id="loginForm" autocomplete="off">
+      <h1>harness</h1>
+      <p>Sign in to continue.</p>
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" required autofocus>
+      <label for="password">Password</label>
+      <div class="password-field">
+        <input type="password" id="password" name="password" required>
+        <button type="button" class="password-toggle" id="passwordToggle"
+                aria-label="Show password" aria-pressed="false" tabindex="0">
+          <svg class="icon-eye" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <svg class="icon-eye-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+            <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+        </button>
+      </div>
+      <div class="login-error" id="loginError" style="display: none;"></div>
+      <button type="submit" id="loginBtn">Sign in</button>
+    </form>
+  </div>
+
+  <div id="entityPane" style="display: none;">
+    <div class="entity-list" id="entityList">
+      <div class="empty" id="entityEmpty" style="display: none;">
+        <h2>No entities yet</h2>
+        <div>Your installed agents will appear here.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- New group dialog (admin only, opened from the top-bar button). -->
+<div class="modal-backdrop" id="groupModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="groupModalTitle">
+  <div class="modal">
+    <h2 id="groupModalTitle">New group</h2>
+    <label for="groupName">Name</label>
+    <input type="text" id="groupName" maxlength="120" placeholder="e.g. Projects crew">
+    <label for="groupDesc">Description <span class="muted">(optional)</span></label>
+    <textarea id="groupDesc" rows="2" maxlength="2000" placeholder="What this group is for"></textarea>
+    <div class="modal-section">Members <span class="muted">— anyone in the user list</span></div>
+    <div class="pick-list" id="groupMemberList"></div>
+    <div class="modal-section">Agents <span class="muted">— these can be @mentioned in the chat</span></div>
+    <div class="pick-list" id="groupAgentList"></div>
+    <div class="modal-error" id="groupError" style="display:none;"></div>
+    <div class="modal-actions">
+      <button type="button" class="secondary" id="groupCancel">Cancel</button>
+      <button type="button" class="primary" id="groupCreate">Create group</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js" data-page="index"></script>
+</body>
+</html>

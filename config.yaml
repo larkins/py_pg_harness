@@ -1,0 +1,149 @@
+# =============================================================================
+# Harness configuration.
+#
+# Every ${VAR} reference is resolved against the process environment (the
+# .env file next to this one is loaded at startup). A missing variable is a
+# hard startup failure with a clear message -- there is no silent
+# defaulting. .env.example documents every variable.
+# =============================================================================
+app:
+  name: harness
+  bind: ${HARNESS_BIND}
+  tls:
+    cert: ${HARNESS_TLS_CERT}
+    key: ${HARNESS_TLS_KEY}
+  default_agent: ${HARNESS_DEFAULT_AGENT}
+  # Database name where the agent schemas live. Historically the harness
+  # had its own "harness" DB; now it lives inside the installation
+  # database to avoid one-DB-per-user sprawl.
+  # Override per-install with HARNESS_INSTALLATION_DATABASE.
+  installation_database: ${HARNESS_INSTALLATION_DATABASE}
+  # The installed agent roster -- one entry per agent, one schema per
+  # agent in the database. tools/migrate.sh reads this list (or the
+  # HARNESS_AGENTS override) to create the per-agent schemas, so the two
+  # have to agree. Trim it to a single entry for a one-agent install.
+  agents:
+  - agent
+  pie_root: ${HARNESS_PIE_ROOT}
+  secret_key: ${HARNESS_SECRET_KEY}
+db:
+  url: ${DATABASE_URL}
+  operator_role: ${APP_DB_OPERATOR_ROLE}
+  runtime_role: ${APP_DB_RUNTIME_ROLE}
+  database: ${HARNESS_DB}
+llm:
+  adapter: ${LLM_ADAPTER}
+  api_key: ${LLM_API_KEY}
+  base_url: ${LLM_BASE_URL}
+  model: ${LLM_MODEL}
+  # Cap opened to the model's true ceiling (524288, the
+  # value the API rejects above: "model[MiniMax-M3.1-Flash] does not support
+  # max tokens > 524288"). MiniMax is effectively free, so there is no cost
+  # reason to ration output. The knob is deliberately still wired: to reinstate
+  # a cap, set LLM_MAX_TOKENS (and the per-agent *_LLM_MAX_TOKENS) to whatever
+  # you want, e.g. 8192. No code change needed.
+  max_tokens: ${LLM_MAX_TOKENS}
+  timeout_s: ${LLM_TIMEOUT_S}
+  temperature: ${LLM_TEMPERATURE}
+  # Per-agent LLM overrides (added 2026-10-19).
+  # Each entry is a complete LLM config block; the harness uses it for
+  # that specific agent's adapter instead of the global block above.
+  # Missing agents fall through to the global block.
+  # Env vars resolve via ${VAR}; per-agent keys live in the .creds/ dir
+  # (or wherever the agent-specific env file points).
+embedding:
+  base_url: ${EMBEDDING_BASE_URL}
+  model: ${EMBEDDING_MODEL}
+  dimensions: ${EMBEDDING_DIMENSIONS}
+  api_key: ${EMBEDDING_API_KEY}
+  timeout_s: ${EMBEDDING_TIMEOUT_S}
+memory:
+  top_k: ${MEMORY_TOP_K}
+  vector_limit: ${MEMORY_VECTOR_LIMIT}
+  trigram_limit: ${MEMORY_TRIGRAM_LIMIT}
+  recency_decay_days: ${MEMORY_RECENCY_DECAY_DAYS}
+  chunk:
+    max_tokens: ${MEMORY_CHUNK_MAX_TOKENS}
+    min_tokens: ${MEMORY_CHUNK_MIN_TOKENS}
+    overlap_tokens: ${MEMORY_CHUNK_OVERLAP_TOKENS}
+  permanent:
+    max_tokens: ${MEMORY_PERMANENT_MAX_TOKENS}
+    warn_overflow: ${MEMORY_PERMANENT_WARN_OVERFLOW}
+    pin_audit: ${MEMORY_PERMANENT_PIN_AUDIT}
+agent:
+  max_tool_iterations: ${MAX_TOOL_ITERATIONS}
+  max_searches_per_turn: ${MAX_SEARCHES_PER_TURN}
+  max_pins_per_turn: ${MAX_PINS_PER_TURN}
+  max_unpins_per_turn: ${MAX_UNPINS_PER_TURN}
+prompt:
+  # Conditional system-prompt pressure warnings (2026-10-22).
+  # When an identity file or the permanent-memory block passes this
+  # fraction of its cap, the harness appends a warning to the system
+  # prompt telling the agent to move the detail out to memories,
+  # skills, scripts or docs. Set PROMPT_PRESSURE_ENABLED=false to
+  # disable.
+  pressure_enabled: ${PROMPT_PRESSURE_ENABLED}
+  pressure_threshold: ${PROMPT_PRESSURE_THRESHOLD}
+reverie:
+  # Nightly reverie (added 2026-10-23). NOT a heartbeat: the reverie
+  # is a real agent turn, captured in the turns table like any other
+  # turn, so the next day's conversation has context of what the reverie
+  # changed. It asks the agent to clean up its own context budget
+  # (permanent memories + identity files) down to a target percentage
+  # of the caps, then reflect and put proposals to the user in chat.
+  #
+  # It only fires if the agent had real activity in the window
+  # (REVERIE_ACTIVITY_WINDOW_HOURS) - otherwise the turn history would
+  # fill up with no-op reveries.
+  enabled: ${REVERIE_ENABLED}
+  # Which agents get a reverie. Empty = every installed agent.
+  agents: ${REVERIE_AGENTS}
+  # Nightly time of day (local to REVERIE_TIMEZONE). The systemd timer
+  # is generated from this by scripts/install_reverie_timer.sh.
+  at: ${REVERIE_AT}
+  timezone: ${REVERIE_TIMEZONE}
+  # Targets the reverie must reach, as a fraction of each cap. 0.60
+  # leaves headroom below the 0.85 prompt-pressure warning.
+  file_target_pct: ${REVERIE_FILE_TARGET_PCT}
+  memory_target_pct: ${REVERIE_MEMORY_TARGET_PCT}
+  # Only fire if the agent had activity in this window.
+  activity_window_hours: ${REVERIE_ACTIVITY_WINDOW_HOURS}
+  # The DM partner the reverie turn runs as (the agent's own user).
+  user_email: ${REVERIE_USER_EMAIL}
+  # Optional per-agent instruction file, relative to pie/<agent>/identity/.
+  # If present, its content is appended to the reverie brief.
+  prompt_file: ${REVERIE_PROMPT_FILE}
+  # Identity files the reverie must NOT edit. SOUL.md holds the super
+  # important rules and may only change with the user's permission.
+  protected_files: ${REVERIE_PROTECTED_FILES}
+  # Optional cap on the tool iterations of one reverie turn (0 = use the
+  # global agent.max_tool_iterations). A reverie should be a focused
+  # session, not an open-ended survey.
+  max_tool_iterations: ${REVERIE_MAX_TOOL_ITERATIONS}
+bootstrap:
+  files:
+    SOUL.md:
+      path: SOUL.md
+      max_bytes: ${BOOTSTRAP_SOUL_MAX_BYTES}
+    USER.md:
+      path: USER.md
+      max_bytes: ${BOOTSTRAP_USER_MAX_BYTES}
+    AGENTS.md:
+      path: AGENTS.md
+      max_bytes: ${BOOTSTRAP_AGENTS_MAX_BYTES}
+    IDENTITY.md:
+      path: IDENTITY.md
+      max_bytes: ${BOOTSTRAP_IDENTITY_MAX_BYTES}
+  behavior_on_overflow: ${BOOTSTRAP_OVERFLOW}
+security:
+  headers:
+    x_content_type_options: nosniff
+    x_frame_options: DENY
+    strict_transport_security: max-age=${SECURITY_HSTS_MAX_AGE}; includeSubDomains
+    referrer_policy: strict-origin-when-cross-origin
+    csp: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';
+      script-src 'self'
+  rate_limit:
+    default: ${RATE_LIMIT_DEFAULT}
+    chat: ${RATE_LIMIT_CHAT}
+    memory: ${RATE_LIMIT_MEMORY}

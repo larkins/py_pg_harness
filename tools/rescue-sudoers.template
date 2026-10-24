@@ -1,0 +1,45 @@
+# =====================================================================
+# rescue-sudoers.template — the privilege-isolated installer's rescue path
+# =====================================================================
+# The harness may be installed in a session that is NOT the session it
+# watches (e.g. `<operator>` watching `<watched>`). That session needs a
+# narrow, explicit way to help the watched session — never blanket root.
+#
+# Install as root:
+#   sudo install -o root -g root -m 0440 rescue-sudoers.template \
+#        /etc/sudoers.d/sysadmin-harness-rescue
+#   sudo visudo -c /etc/sudoers.d/sysadmin-harness-rescue
+#
+# Replace `<operator>` with the harness's operator user and `<watched>` with
+# the session it rescues. Every line is an enumerated capability: if a
+# line says "ALL", it is too broad — use the specific command.
+# =====================================================================
+
+# --- the operator of the harness, acting AS the watched user ---------
+# Start / stop / inspect the watched session's user services.
+<operator> ALL=(<watched>) NOPASSWD: /usr/bin/systemctl --user status *
+<operator> ALL=(<watched>) NOPASSWD: /usr/bin/systemctl --user restart *
+<operator> ALL=(<watched>) NOPASSWD: /usr/bin/systemctl --user stop *
+<operator> ALL=(<watched>) NOPASSWD: /usr/bin/systemctl --user start *
+<operator> ALL=(<watched>) NOPASSWD: /usr/bin/systemctl --user reload *
+<operator> ALL=(<watched>) NOPASSWD: /usr/bin/systemctl --user cat *
+<operator> ALL=(<watched>) NOPASSWD: /usr/bin/systemctl --user list-units *
+<operator> ALL=(<watched>) NOPASSWD: /usr/bin/systemctl --user list-timers *
+<operator> ALL=(<watched>) NOPASSWD: /usr/bin/systemctl --user daemon-reload
+
+# Read the watched session's logs.
+<operator> ALL=(<watched>) NOPASSWD: /usr/bin/journalctl --user *
+
+# Deploy a file into the watched session's tree (the installer's own
+# payload only — a path prefix, not a wildcard over everything).
+sysadmin ALL=(root) NOPASSWD: /usr/bin/install -o the sibling -g the sibling -m 0644 <operator_home>/harness/dist/* <watched_home>/*
+
+# The watched session's own database role, for read-only diagnostics.
+# The password comes from the .pgpass of the operator, never from here.
+<operator> ALL=(<watched>) NOPASSWD: /usr/bin/psql -d the sibling -c SELECT*
+
+# --- and what is deliberately NOT allowed ----------------------------
+#   - no root shell, no `su`, no `sudo -i`
+#   - no /etc, no /usr/bin/passwd, no useradd/usermod
+#   - no access to other customers' data
+#   - no rm outside the installer's own directory

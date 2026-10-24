@@ -1,0 +1,785 @@
+/* harness — mobile-first styles for the entity-based refactor (2026-10-17) */
+
+:root {
+  --bg: #1a1d23;
+  --bg-elev: #21262e;
+  --bg-row: #1f232a;
+  --bg-row-hover: #2a2f38;
+  --border: #2c313a;
+  --text: #e6e9ef;
+  --text-muted: #8a93a3;
+  --accent: #4f9aff;
+  --accent-hover: #6db0ff;
+  --danger: #e85a5a;
+  --user-bubble: #2a3656;
+  --assistant-bubble: #1f2c20;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+               'Helvetica Neue', Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  overflow: hidden;  /* prevent body-level scroll; inner panes handle their own */
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); }
+
+/* Top bar (shared between index + chat) — fixed height, flex-shrink:0 */
+.topbar {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-elev);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  min-height: 60px;
+}
+.topbar .title { font-size: 20px; font-weight: 600; flex: 0 0 auto; }
+.topbar .who { font-size: 12px; color: var(--text-muted); }
+.topbar .icon-btn {
+  background: transparent; border: 0; cursor: pointer;
+  width: 36px; height: 36px; display: flex; align-items: center;
+  justify-content: center; color: var(--text-muted);
+  border-radius: 50%;
+}
+.topbar .menu-wrap { margin-left: auto; }
+.topbar .icon-btn:hover { background: var(--bg-row-hover); color: var(--text); }
+
+/* Entity list (index page) */
+.entity-list { padding: 0; }
+.entity-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer; color: var(--text);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.entity-row:hover { background: var(--bg-row-hover); }
+.entity-row:active { background: var(--bg-elev); }
+.entity-row .meta { flex: 1; min-width: 0; }
+.entity-row .name { font-weight: 600; font-size: 15px; }
+.entity-row .preview {
+  font-size: 13px; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.entity-row .time {
+  font-size: 11px; color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Entity icon (inline SVG circle with initial) */
+.entity-icon {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: #fff; font-size: 17px;
+  flex-shrink: 0;
+  background: #4f9aff;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+
+/* Chat page — fills the available space (main is flex:1, .chat fills main) */
+.chat {
+  display: flex; flex-direction: column;
+  flex: 1;
+  min-height: 0;  /* critical: lets .messages overflow inside the flex parent */
+}
+.chat .messages {
+  flex: 1; overflow-y: auto;
+  padding: 12px 16px;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+}
+.msg {
+  max-width: 80%;
+  margin: 6px 0;
+  padding: 9px 13px;
+  border-radius: 14px;
+  word-wrap: break-word; overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.msg.user {
+  background: var(--user-bubble);
+  color: var(--text);
+  margin-left: auto;
+  border-bottom-right-radius: 4px;
+}
+.msg.assistant {
+  background: var(--assistant-bubble);
+  color: var(--text);
+  margin-right: auto;
+  border-bottom-left-radius: 4px;
+}
+.msg .meta {
+  font-size: 10px; color: var(--text-muted);
+  margin-top: 4px;
+}
+/* Attachments on a message bubble. Two flavours:
+     - .imgs : inline image previews (max 180px thumbnails)
+     - .files: row of file-attachment chips (icon + name + size)
+   Both are rendered by renderAttachments() in app.js for
+   user-side AND assistant-side turns. The assistant bubble gets
+   file chips from the new `attach_file` tool (Phase 15,
+   2026-10-18). */
+.msg .attachments { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+.msg .attachments.imgs { gap: 6px; }
+.msg .attachments img {
+  max-width: 180px; max-height: 180px;
+  border-radius: 8px;
+  display: block;
+}
+.msg .attachments.files { gap: 6px; flex-direction: column; align-items: flex-start; }
+/* Single file-attachment chip — paperclip icon, filename,
+   optional size. Works inside both user and assistant bubbles. */
+.msg .att-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text);
+  text-decoration: none;
+  max-width: 100%;
+  transition: background 0.15s;
+}
+.msg .att-chip:hover { background: rgba(255,255,255,0.16); }
+.msg .att-chip svg { color: var(--text-muted); flex-shrink: 0; }
+.msg .att-chip .att-name {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 200px;
+}
+.msg .att-chip .att-size {
+  color: var(--text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+/* Legacy single-link style kept for back-compat (older browsers
+   that don't run the new renderAttachments() helper). */
+.msg .attachments a {
+  display: inline-block; padding: 4px 8px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 6px; font-size: 12px;
+}
+
+.empty {
+  text-align: center; color: var(--text-muted);
+  padding: 40px 20px;
+}
+.empty h2 { color: var(--text); font-size: 18px; margin: 0 0 6px; }
+
+main#main {
+  flex: 1; min-height: 0; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+
+/* Input bar */
+.input-bar {
+  display: flex; gap: 8px; align-items: end;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-elev);
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+.input-bar textarea {
+  flex: 1; resize: none; min-height: 40px; max-height: 160px;
+  padding: 10px 12px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font: inherit; font-size: 15px;
+  outline: none;
+}
+.input-bar textarea:focus { border-color: var(--accent); }
+.input-bar .send {
+  background: var(--accent); color: #fff;
+  border: 0; border-radius: 10px;
+  padding: 0 16px; height: 40px; min-width: 56px;
+  font: inherit; font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.input-bar .send:disabled { background: #555; cursor: default; }
+.input-bar .send:not(:disabled):active { background: var(--accent-hover); }
+.input-bar .attach {
+  background: transparent; border: 0;
+  width: 40px; height: 40px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); cursor: pointer;
+  border-radius: 50%;
+}
+.input-bar .attach:hover { background: var(--bg-row-hover); color: var(--text); }
+
+/* Pending attachment preview */
+.pending-attachments {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  padding: 6px 16px 0;
+}
+.pending-attachments .chip {
+  position: relative; background: var(--bg-row);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 24px 4px 6px;
+  font-size: 12px;
+  display: flex; align-items: center; gap: 4px;
+}
+.pending-attachments .chip img {
+  max-width: 40px; max-height: 40px; border-radius: 4px;
+}
+.pending-attachments .chip .remove {
+  position: absolute; right: 2px; top: 2px;
+  background: transparent; border: 0; color: var(--text-muted);
+  width: 18px; height: 18px; border-radius: 50%;
+  cursor: pointer; font-size: 14px; line-height: 1;
+}
+.pending-attachments .chip .remove:hover { background: var(--danger); color: #fff; }
+
+/* Login form (shared) */
+.login-form {
+  max-width: 380px; margin: 80px auto; padding: 24px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+.login-form h1 { font-size: 22px; margin: 0 0 4px; }
+.login-form p { color: var(--text-muted); margin: 0 0 20px; font-size: 13px; }
+.login-form label { display: block; font-size: 12px; margin-top: 12px; color: var(--text-muted); }
+.login-form input {
+  width: 100%; padding: 10px 12px;
+  background: var(--bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px;
+  font: inherit; font-size: 15px; margin-top: 4px;
+  outline: none;
+}
+.login-form input:focus { border-color: var(--accent); }
+.login-form button {
+  width: 100%; margin-top: 18px;
+  padding: 12px; background: var(--accent);
+  color: #fff; border: 0; border-radius: 8px;
+  cursor: pointer; font: inherit; font-weight: 600;
+  font-size: 15px;
+}
+.login-form button:disabled { background: #555; cursor: default; }
+.login-error {
+  color: var(--danger); padding: 8px 12px;
+  background: rgba(232,90,90,0.1);
+  border: 1px solid rgba(232,90,90,0.3);
+  border-radius: 6px;
+  margin-top: 12px; font-size: 13px;
+}
+
+/* Password field */
+.password-field { position: relative; }
+.password-field input { padding-right: 40px; }
+.login-form button.password-toggle {
+  position: absolute; right: 4px; top: 50%;
+  transform: translateY(-50%);
+  background: transparent; border: 0;
+  width: 32px; height: 32px; z-index: 2;
+  margin: 0; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-muted);
+  border-radius: 4px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.login-form button.password-toggle:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+.login-form button.password-toggle svg { width: 16px; height: 16px; display: block; }
+.login-form button.password-toggle .icon-eye-off { display: none; }
+.login-form button.password-toggle.is-visible .icon-eye { display: none; }
+.login-form button.password-toggle.is-visible .icon-eye-off { display: block; }
+
+/* Burger menu (top-right dropdown) */
+.menu-wrap { position: relative; }
+.menu-popover {
+  position: absolute;
+  top: calc(100% + 6px); right: 0;
+  min-width: 240px; max-width: 320px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  z-index: 50;
+  overflow: hidden;
+}
+.menu-header {
+  padding: 10px 14px;
+  font-size: 12px; color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  word-break: break-all;
+}
+.menu-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 12px 14px;
+  background: transparent; border: 0;
+  color: var(--text); font: inherit; font-size: 14px;
+  text-align: left; cursor: pointer;
+  text-decoration: none;
+}
+.menu-item:hover { background: var(--bg-row-hover); }
+.menu-item .icon { color: var(--text-muted); display: flex; align-items: center; }
+.menu-item .label { flex: 1; }
+.menu-item.danger { color: var(--danger); }
+.menu-item.danger .icon { color: var(--danger); }
+.menu-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* Entity icon: support uploaded images as well as the letter placeholder */
+.entity-icon {
+  background-size: cover; background-position: center;
+}
+.entity-icon img {
+  width: 100%; height: 100%;
+  object-fit: cover; border-radius: 50%;
+  display: block;
+}
+.entity-row .edit-btn {
+  background: transparent; border: 0; cursor: pointer;
+  color: var(--text-muted);
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+.entity-row .edit-btn:hover { background: var(--bg-row-hover); color: var(--text); }
+.entity-row .edit-btn:active { background: var(--bg-elev); }
+
+/* Hidden file input used by the burger menu's "Change image" item */
+.icon-file-input { display: none; }
+
+/* Telegram-style typing indicator in the topbar.
+   Three small dots that bounce in sequence. Hidden by default;
+   .is-active (toggled by JS while the API call is in flight) shows it. */
+.typing-indicator {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  font-size: 13px;
+  /* Bright blue for contrast against the dark nav bar (bg-elev is
+     #21262e). The accent-hover shade is more saturated than --accent. */
+  color: var(--accent-hover);
+  font-weight: 500;
+  white-space: nowrap;
+  /* Sits immediately adjacent to the entity name. The .title no
+     longer takes flex:1 (it's flex:0 0 auto now), so the typing
+     indicator pushes the menu-wrap to the right via margin-left:auto
+     on .menu-wrap. */
+}
+.typing-indicator.is-active { display: inline-flex; }
+.typing-indicator .dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 14px;  /* match the bounce amplitude so it doesn't clip */
+}
+.typing-indicator .dot {
+  width: 5px; height: 5px;
+  background: var(--accent-hover);
+  border-radius: 50%;
+  animation: typing-bounce 1.2s infinite ease-in-out;
+}
+.typing-indicator .dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-indicator .dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30%           { transform: translateY(-4px); opacity: 1; }
+}
+/* Respect prefers-reduced-motion: no animation, just show the dots. */
+@media (prefers-reduced-motion: reduce) {
+  .typing-indicator .dot { animation: none; opacity: 0.7; }
+}
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: var(--bg-elev); border: 1px solid var(--border);
+  padding: 8px 14px; border-radius: 8px;
+  font-size: 13px; z-index: 100;
+  box-shadow: var(--shadow);
+}
+.toast.error { color: var(--danger); border-color: var(--danger); }
+
+
+/* === Streaming chat (Phase 15, 2026-10-17) === */
+.msg.assistant.live {
+  /* Same shape as the normal assistant bubble, but with a subtle
+     pulsing left border so the user knows the model is still
+     working. Removed via .live removal on the final event. */
+  border-left: 2px solid var(--accent, #4f9aff);
+  animation: harness-pulse 1.4s ease-in-out infinite;
+}
+@keyframes harness-pulse {
+  0%, 100% { border-left-color: var(--accent, #4f9aff); }
+  50%      { border-left-color: transparent; }
+}
+.msg .trace {
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+.msg .trace summary {
+  cursor: pointer;
+  color: var(--muted, #888);
+  user-select: none;
+}
+.msg .trace-list {
+  margin: 4px 0 0 0;
+  padding: 0 0 0 18px;
+  max-height: 240px;
+  overflow-y: auto;
+  list-style: decimal;
+}
+.msg .trace-item { color: var(--muted, #888); }
+.msg .trace-item.pending { color: var(--accent, #4f9aff); }
+.msg .trace-item.ok { color: var(--ok, #5fc77e); }
+.msg .trace-item.err { color: var(--err, #e85a85); }
+.msg .trace-item.nudge { color: var(--warn, #e89c4f); }
+
+/* Markdown rendering (Phase 16.2, 2026-10-20): styles for HTML
+   emitted by marked + sanitised by DOMPurify inside .msg bubbles.
+   .msg has white-space: pre-wrap (legacy), so we override that
+   inside .md to let block elements (p, ul, h2) flow normally.
+   Dark theme uses --text / --text-muted / --accent vars. */
+.msg p { margin: 0 0 8px 0; }
+.msg p:last-child { margin-bottom: 0; }
+.msg h1, .msg h2, .msg h3, .msg h4 {
+  margin: 14px 0 6px 0; font-weight: 600; line-height: 1.25;
+  color: var(--text);
+}
+.msg h1 { font-size: 1.25em; }
+.msg h2 { font-size: 1.15em; }
+.msg h3 { font-size: 1.05em; }
+.msg h4 { font-size: 1em; }
+.msg ul, .msg ol { margin: 6px 0; padding-left: 22px; }
+.msg li { margin: 2px 0; }
+.msg li > ul, .msg li > ol { margin: 2px 0; }
+.msg blockquote {
+  margin: 6px 0;
+  padding: 4px 12px;
+  border-left: 3px solid var(--border, #2c313a);
+  color: var(--text-muted, #8a93a3);
+  background: rgba(255,255,255,0.02);
+  border-radius: 0 4px 4px 0;
+}
+.msg code {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  background: rgba(255,255,255,0.07);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--text);
+  word-break: break-word;
+}
+.msg pre {
+  margin: 8px 0;
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border, #2c313a);
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  line-height: 1.4;
+  white-space: pre;        /* override pre-wrap from .msg */
+}
+.msg pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+  color: var(--text);
+  white-space: pre;
+}
+.msg table {
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 0.92em;
+}
+.msg th, .msg td {
+  border: 1px solid var(--border, #2c313a);
+  padding: 5px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.msg th { background: rgba(255,255,255,0.04); font-weight: 600; }
+.msg hr {
+  border: none;
+  border-top: 1px solid var(--border, #2c313a);
+  margin: 12px 0;
+}
+.msg a {
+  color: var(--accent, #4f9aff);
+  text-decoration: underline;
+  word-break: break-word;
+}
+.msg a:hover { color: var(--accent-hover, #6db0ff); }
+.msg strong { font-weight: 600; color: var(--text); }
+.msg em { font-style: italic; }
+.msg del, .msg s { color: var(--text-muted, #8a93a3); opacity: 0.85; }
+/* task list checkboxes (gfm: - [ ] / - [x]) */
+.msg input[type="checkbox"] {
+  margin-right: 6px;
+  vertical-align: middle;
+}
+/* Override .msg { white-space: pre-wrap } for block-level md elements
+   so block flow works correctly. Inline text inside <p>/<li> still
+   wraps normally; we just stop forcing pre-wrap on the whole tree. */
+.msg p, .msg li, .msg h1, .msg h2, .msg h3, .msg h4, .msg blockquote,
+.msg table, .msg ul, .msg ol, .msg pre, .msg hr { white-space: normal; }
+.msg p, .msg li { white-space: normal; word-wrap: break-word; }
+
+/* Phase 16.3 (2026-10-20): error state on the live bubble when the
+   model API exhausts retries mid-turn. Distinct from .tool.result.error
+   (which is for tool-call errors) and from .toast.error (which is for
+   global toast popups). */
+.msg.err { background: #3a2426; border-left: 3px solid #e85a85; color: #ffd6dc; }
+.msg.err .err-title { font-weight: 600; color: #ff8aa0; margin-bottom: 6px; }
+.msg.err .err-message { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #ffc8d2; background: rgba(0,0,0,0.25); padding: 8px 10px; border-radius: 4px; margin-bottom: 8px; white-space: pre-wrap; }
+.msg.err .err-hint { font-size: 12px; color: #ffd6dc; opacity: 0.85; }
+.trace-item.err-retry { background: rgba(232,90,133,0.15); color: #ff8aa0; padding: 4px 8px; border-radius: 4px; display: block; text-align: center; cursor: pointer; }
+.trace-item.err-retry:hover { background: rgba(232,90,133,0.25); }
+
+/* ===================================================================
+   Groups (2026-10-23)
+   The landing page lists the installed agents and, below them, the
+   group chats the user is a member of. Admins create groups from the
+   "New group" button in the top bar.
+   =================================================================== */
+
+.list-section {
+  padding: 14px 16px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.group-row .preview.roster {
+  font-size: 12px;
+  color: var(--accent);
+  opacity: 0.85;
+  margin-top: 1px;
+}
+
+/* --- new group modal --- */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  z-index: 60;
+}
+.modal {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 520px;
+  max-height: 86vh;
+  overflow-y: auto;
+  padding: 18px 20px 16px;
+}
+.modal h2 { margin: 0 0 14px; font-size: 18px; }
+.modal label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 12px 0 5px;
+}
+.modal input[type="text"],
+.modal textarea {
+  width: 100%;
+  padding: 9px 11px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit; font-size: 15px;
+  outline: none;
+  resize: vertical;
+}
+.modal input[type="text"]:focus,
+.modal textarea:focus { border-color: var(--accent); }
+.modal .muted { color: var(--text-muted); font-weight: 400; }
+.modal-section {
+  margin: 16px 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+.pick-list {
+  max-height: 190px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+.pick-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 11px;
+  font-size: 13px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+.pick-item:last-child { border-bottom: 0; }
+.pick-item:hover { background: var(--bg-row-hover); }
+.pick-item.inactive { opacity: 0.5; }
+.pick-item span {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  min-width: 0;   /* let the flex item shrink so the ellipsis works */
+}
+.pick-empty { padding: 12px; font-size: 13px; color: var(--text-muted); }
+.modal-error {
+  margin-top: 12px;
+  padding: 9px 11px;
+  background: #3a2426;
+  border-left: 3px solid var(--danger);
+  border-radius: 6px;
+  color: #ffd6dc;
+  font-size: 13px;
+}
+.modal-actions {
+  display: flex; justify-content: flex-end; gap: 10px;
+  margin-top: 18px;
+}
+.modal-actions button {
+  border: 0; border-radius: 8px;
+  padding: 9px 16px;
+  font: inherit; font-weight: 600; font-size: 14px;
+  cursor: pointer;
+}
+.modal-actions .primary { background: var(--accent); color: #fff; }
+.modal-actions .primary:hover { background: var(--accent-hover); }
+.modal-actions .primary:disabled { background: #555; cursor: default; }
+.modal-actions .secondary {
+  background: transparent; color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.modal-actions .secondary:hover { background: var(--bg-row-hover); color: var(--text); }
+
+/* --- group chat page --- */
+.mention-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-elev);
+  overflow-x: auto;
+}
+.mention-bar-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+.mention-chips { display: flex; gap: 6px; }
+.mention-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px 3px 4px;
+  background: var(--bg-row);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  font: inherit; font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.mention-chip:hover { background: var(--bg-row-hover); border-color: var(--accent); }
+.mention-chip .entity-icon { width: 18px; height: 18px; font-size: 9px; }
+
+.gmsg {
+  margin: 8px 0;
+  max-width: 88%;
+}
+.gmsg-meta {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+.gmsg-name { font-weight: 600; color: var(--text); }
+.gmsg-body {
+  padding: 9px 13px;
+  border-radius: 12px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+.gmsg-user { margin-left: auto; }
+.gmsg-user .gmsg-body {
+  background: var(--user-bubble);
+  border-bottom-right-radius: 4px;
+}
+.gmsg-agent { margin-right: auto; }
+.gmsg-agent .gmsg-body {
+  background: var(--assistant-bubble);
+  border-bottom-left-radius: 4px;
+}
+.gmsg-agent.live .gmsg-body { opacity: 0.92; }
+.gmsg-error { color: #ff8aa0; }
+.gsys {
+  text-align: center;
+  margin: 10px auto;
+  max-width: 90%;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.gsys-time { opacity: 0.6; }
+
+/* --- reverie turn (2026-10-23) -------------------------------------------
+   The nightly reverie IS a turn (it lives in the turns table), but its
+   prompt is a long machine-generated brief rather than something the
+   user typed, so it renders as a collapsed block instead of a giant
+   blue bubble. */
+.msg.reverie {
+  max-width: 92%;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-left: 3px solid #7e57c2;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.msg.reverie .reverie-brief summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-muted);
+  list-style: none;
+  user-select: none;
+}
+.msg.reverie .reverie-brief summary::-webkit-details-marker { display: none; }
+.msg.reverie .reverie-brief summary:before { content: '▸ '; color: #7e57c2; }
+.msg.reverie .reverie-brief[open] summary:before { content: '▾ '; }
+.msg.reverie .reverie-brief pre {
+  margin: 8px 0 4px;
+  max-height: 320px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+.msg.reverie .meta { font-size: 10px; color: var(--text-muted); margin-top: 4px; }

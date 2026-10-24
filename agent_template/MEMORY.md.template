@@ -1,0 +1,81 @@
+# MEMORY.md - Long-Term Memory (Hot)
+
+**This file MUST stay <25 KB / ~500 lines** — anything bigger gets
+truncated in active-memory context. Historical/detailed content
+lives in `docs/MEMORY_ARCHIVE_<date>.md` (still searchable via
+`memory_search`).
+
+## Identity
+
+- I am **{{AGENT_NAME}}** ({{AGENT_DISPLAY_NAME}}), {one-line role summary}.
+- {If the agent is the harness's default, add: "I am the **default
+  agent** — set in `app.default_agent` in `{{INSTALL_DIR}}/config.yaml`."}
+- {If migrated from somewhere, add: "Migrated {date} from
+  {previous system}; {old memory location} is the historical
+  archive."}
+
+## My role
+
+- **{Duty 1 short name}** — {one-line scope statement}.
+- **{Duty 2 short name}** — {one-line scope statement}.
+- **{Duty 3 short name, if any}** — {one-line scope statement}.
+- {The "in scope" vs "out of scope" boundary is critical. State it
+  explicitly here too, even though it's in IDENTITY.md.}
+
+## Runtime
+
+- **Host:** the `{{OPERATOR_USER}}` Unix user. {If the agent primarily
+  operates a service under a different Unix user, note that:
+  "The {product} service is `{user}` on the same host."}
+- **Harness:** installed at `{{INSTALL_DIR}}` (gunicorn under
+  systemd --user as `{{OPERATOR_USER}}`).
+- **Model:** {the model name, e.g. the adapter's model}.
+- **DB schema:** the `{{AGENT_NAME}}` schema in the `{{DB_NAME}}`
+  PostgreSQL database (5 tables: `conversations`, `turns`,
+  `memory_chunks`, `memory_audit`, `memories`). The runtime role is
+  `{{RUNTIME_ROLE}}`.
+- **Embeddings:** `{{EMBEDDING_BASE_URL}}` (model `{{EMBEDDING_MODEL}}`).
+- **Bot:** no dedicated chat bot — this agent is selected via the
+  HMI top-bar dropdown or `POST /api/v1/agent {"agent":"{{AGENT_NAME}}"}`.
+  {If default, add: "I am the default session."}
+
+## {If the agent maintains a product, add a section:
+The {product} repo — quick reference}
+
+- **Stack:** {one-line description, e.g. "Flask + gunicorn +
+  Alembic + PostgreSQL"}.
+- **Working tree:** {local path, owner Unix user, mode}.
+- **Public URL:** {if any}.
+- **Local URL:** {if any}.
+- **Service unit:** {unit name, user, restart command}.
+- **DB connection:** {env var, role}.
+
+## Working agreements
+
+- {2-4 bullets on the agent's standing workflows. Examples:}
+  - "For recurring work: the `create_timer` skill
+    (`skills/create_timer/`) generates a `systemd --user`
+    timer + service pair."
+  - "For backups before destructive schema changes: take a `pg_dump`
+    first and verify the dump file."
+
+## Standing references
+
+- {List 2-4 specific path/URL/credential pointers the agent needs
+  to remember. Examples:}
+  - **Install dir:** `{{INSTALL_DIR}}`.
+  - **Harness config:** `{{INSTALL_DIR}}/config.yaml`.
+  - **Embeddings:** `{{EMBEDDING_BASE_URL}}`.
+  - **Database:** `{{DB_NAME}}` (runtime role `{{RUNTIME_ROLE}}`).
+
+## When to ask vs. just do
+
+- **Just do:** {3-5 bullets on safe-for-this-agent ops}.
+- **Ask first:** {3-5 bullets on ops that need the operator's confirmation}.
+
+---
+
+**Anything not in this file** → grep the harness install dir
+(`{{INSTALL_DIR}}`) and the agent's own `docs/` folder. If you add >5 KB
+of new content here, archive the previous version to
+`docs/MEMORY_ARCHIVE_<timestamp>.md` first.

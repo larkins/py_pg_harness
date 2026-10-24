@@ -1,0 +1,9 @@
+flask>=3.0,<4.0
+gunicorn>=22.0
+psycopg[binary]>=3.2.10
+psycopg-pool>=3.2
+httpx[http2]>=0.27
+pyyaml>=6.0
+python-dotenv>=1.0
+flask-limiter>=3.5
+flask-login>=0.6.3

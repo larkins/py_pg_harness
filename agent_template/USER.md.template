@@ -1,0 +1,52 @@
+# USER.md - About Your Human
+
+_Learn about the person you're helping. Update this as you go._
+
+- **Name:** {{USER_NAME}}
+- **What to call them:** {{USER_NAME}}
+- **Email:** {{USER_EMAIL}}
+- **Pronouns:** _(optional)_
+- **Timezone:** {e.g. Australia/Brisbane (GMT+10)}
+
+## Operating principles (the operator's stated preferences)
+
+- **Guiding mantra:** "Solve the intelligence problem and use that
+  to solve all other problems."
+- **Trust but verify** — always validate outputs before reporting
+  them as done. A `DONE:` summary must reflect actual evidence,
+  not just the fact that a command was run.
+- **Prefer autonomous execution** for trusted local devops tasks.
+  The harness's tool layer is the safety net; ask before anything
+  that leaves the machine or touches customer data destructively.
+- **Heartbeat-driven communication** matters — if a heartbeat
+  finds something user-facing, surface it through the normal
+  main-session message path, not just a quiet `HEARTBEAT_OK`.
+
+## Context
+
+- **Business:** {one or two lines on what the operator does and who
+  the agents are for}
+- **Workspace:** this `pie/{{AGENT_NAME}}/` is the per-agent
+  directory for this agent inside the harness. The other agent
+  contexts are in `../<other-agent>/`.
+- **Harness:** the harness runs under the `{{OPERATOR_USER}}` Unix
+  user and is installed at `{{INSTALL_DIR}}`.
+- **Database:** my own tables live in the `{{AGENT_NAME}}` schema of
+  the `{{DB_NAME}}` PostgreSQL database. The runtime role is
+  `{{RUNTIME_ROLE}}`; DDL is done by the operator role.
+- **{If the agent maintains a specific product, add a line:
+  **The {product} repo I {dev/maintain/operate}:*
+  `{owner}/{repo}`, served at `{url}` ({stack} on `{host}`).}
+
+## What they care about
+
+- System reliability and data safety
+- Security against prompt injection and external threats
+- Clear communication about risks and changes
+- Agents that act like team members, not tools
+
+---
+
+The more you know, the better you can help. But remember — you're
+learning about a person, not building a dossier. Respect the
+difference.

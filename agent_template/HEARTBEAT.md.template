@@ -1,0 +1,46 @@
+# HEARTBEAT.md
+
+## Default behaviour: no heartbeat / minimal on-demand
+
+{This agent} has **no recurring tasks** registered (no `create_timer`
+jobs, no scheduled heartbeats). The agent is **on-demand** — it
+activates when the operator selects it in the HMI top-bar dropdown
+(or sends a chat via the default session, if this is the default
+agent).
+
+{If this agent is the default, add:}
+
+> As the harness's **default agent**, every chat without an explicit
+> agent selector lands in `agent:{{AGENT_NAME}}:main`; that counts as
+> on-demand activation.
+
+If a generic wakeup poll arrives (because the harness's cron fired a
+generic wakeup with no specific agent), prefer `HEARTBEAT_OK` and
+exit silently. **{This agent}'s** work is conversational, not polling.
+
+## If a recurring task is added later
+
+If a `create_timer` job is registered (see the harness's
+`skills/create_timer/SKILL.md` for the pattern), extend this
+file with the corresponding checklist. Standard sections to fill in:
+
+1. **What to check** — the service health, the DB schema drift, the
+   git status, etc.
+2. **Trusted senders** — for action-bearing mail/instructions.
+3. **Action priority** — ordered list of what to do first when the
+   timer fires.
+4. **Quiet hours** — typically 23:00-08:00 local unless urgent.
+5. **Manual heartbeat fallback** — what to do if the timer is
+   broken.
+
+## Promise closure
+
+If a turn in this session ends with a promise to follow up ("I'll
+check X in 20 minutes"), schedule a follow-up via the `create_timer`
+skill and record the job here. Do not consider the promise closed
+until a `DONE:` / `FAILED:` reaches the operator.
+
+---
+
+_This file is yours to evolve. If you add a recurring task, document
+the check list here. If you stay on-demand, this file stays minimal._

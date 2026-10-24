@@ -1,0 +1,98 @@
+# =====================================================================
+# install.config.example.yaml
+# =====================================================================
+# The ONLY thing you edit before installing. Copy it, fill it in, and run:
+#
+#   cp install.config.example.yaml install.config.yaml
+#   $EDITOR install.config.yaml
+#   tools/install.sh --config install.config.yaml --dry-run    # see the plan
+#   tools/install.sh --config install.config.yaml              # do it
+#
+# There are NO interactive prompts. The installer is idempotent: run it
+# twice and the second run is a no-op.
+#
+# Secrets: leave a value empty and the installer generates one and prints
+# it once. Or supply them via the environment (HARNESS_SECRET_KEY,
+# HARNESS_DB_PASSWORD, LLM_API_KEY, ...) — the YAML value wins when set.
+# =====================================================================
+
+install:
+  # The Unix account the harness runs as. It must already exist.
+  operator_user: sysadmin
+  # Where the repo is cloned / updated.
+  install_dir: /home/sysadmin/harness
+  repo: https://github.com/peristyle-ai/py_pg_harness.git
+
+database:
+  # fresh    -> the installer creates the database
+  # existing -> the database must already exist (the schema-install shape:
+  #             the harness joins a DB that other projects share)
+  mode: existing
+  name: the sibling
+  host: localhost
+  port: 5432
+  # The PG role that owns the objects. Created if missing.
+  operator_role: the sibling
+  # The PG role the app connects as. Created if missing; least privilege.
+  runtime_role: harness_app
+  # Left empty -> generated and printed once.
+  runtime_password: ""
+  # The operator role's password. Only needed when the installer has to
+  # connect as the operator itself (e.g. to create a TRUSTED extension in a
+  # database it owns, when no superuser is available).
+  operator_password: ""
+
+first_admin:
+  # The first human account. The password is NEVER baked into a file:
+  # left empty it is generated and printed once.
+  email: admin@example.com
+  display_name: Admin
+  password: ""
+  role: admin
+
+agent:
+  # The first agent's identity. More agents can be added later.
+  name: agent
+  display_name: Agent
+  emoji: "🌳"
+
+llm:
+  adapter: minimax_m31_flash
+  base_url: https://api.minimax.io/anthropic
+  api_key: ""
+  model: MiniMax-M3.1-Flash
+  max_tokens: 524288
+  timeout_s: 120
+  temperature: 0.7
+  # Optional per-agent overrides. A per-agent block REPLACES the global llm
+  # block wholesale, so it must carry every field. Leave it empty and every
+  # agent uses the global block above.
+  per_agent: {}
+  #  agent1:
+  #    adapter: minimax_m31_flash
+  #    api_key: ""
+  #    base_url: https://api.minimax.io/anthropic
+  #    model: MiniMax-M3.1-Flash
+  #    max_tokens: 524288
+  #    timeout_s: 120
+  #    temperature: 0.7
+  #    thinking: medium
+
+embedding:
+  # Any OpenAI-compatible /v1/embeddings endpoint. The local GPU box is
+  # the default shape.
+  base_url: http://127.0.0.1:8080/v1
+  model: Qwen/Qwen3-Embedding-4B
+  # MUST match the pgvector column (halfvec(1024)). The harness refuses a
+  # mismatch — a wrong dimension is a silent memory-search failure.
+  dimensions: 1024
+  api_key: ""
+  timeout_s: 10
+
+public:
+  # The public hostname for the tunnel (optional — the app binds locally
+  # either way).
+  hostname: ""
+  bind: 127.0.0.1:5010
+  tls_cert: ""
+  tls_key: ""
